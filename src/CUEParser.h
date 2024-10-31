@@ -52,6 +52,7 @@ struct CUETrackInfo
 {
     // Source file name and file type, and offset to start of track data in bytes.
     char filename[CUE_MAX_FILENAME+1];
+    int file_index;
     CUEFileMode file_mode;
     uint64_t file_offset; // corresponds to data_start below
 
@@ -65,6 +66,9 @@ struct CUETrackInfo
     // The CD frames of PREGAP time at the start of this track, or 0 if none are present.
     // These frames of silence are not stored in the underlying data file.
     uint32_t unstored_pregap_length;
+
+    // LBA start position of this file
+    uint32_t file_start;
 
     // LBA start position of the data area (INDEX 01) of this track (in CD frames)
     uint32_t data_start;
@@ -92,6 +96,11 @@ public:
     // The returned pointer remains valid until next call to next_track()
     // or destruction of this object.
     const CUETrackInfo *next_track();
+
+    // Same as next_track(), but takes the file size into account when
+    // switching files. This is necessary for getting the correct track
+    // lengths when the .cue file references multiple .bin files.
+    const CUETrackInfo *next_track(uint64_t prev_file_size);
 
 protected:
     const char *m_cue_sheet;

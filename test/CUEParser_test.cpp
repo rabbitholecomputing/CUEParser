@@ -83,7 +83,7 @@ FILE "Sound.wav" WAVE
     }
 
     COMMENT("Test TRACK 11 (audio from wav)");
-    track = parser.next_track();
+    track = parser.next_track(track->file_offset + 75 * 4 * 2352);
     TEST(track != NULL);
     if (track)
     {
@@ -93,8 +93,8 @@ FILE "Sound.wav" WAVE
         TEST(track->track_number == 11);
         TEST(track->track_mode == CUETrack_AUDIO);
         TEST(track->sector_length == 0);
-        TEST(track->track_start == 0);
-        TEST(track->data_start == 2 * 75);
+        TEST(track->track_start == start3_i1 + 75 * 4);
+        TEST(track->data_start == start3_i1 + 75 * 6);
     }
 
     COMMENT("Test end of file");
@@ -230,10 +230,65 @@ FILE "issue422.bin" BINARY
     return status;
 }
 
+bool test_multifile()
+{
+    bool status = true;
+    const char *cue_sheet = R"(
+CATALOG 0000000000000
+FILE "track1.bin" BINARY
+  TRACK 01 MODE1/2352
+    INDEX 01 00:00:00
+FILE "track2.bin" BINARY
+  TRACK 02 MODE1/2352
+    INDEX 00 00:00:00
+    INDEX 01 00:02:01
+    )";
+
+    CUEParser parser(cue_sheet);
+
+    COMMENT("test_multifile()");
+    COMMENT("Test TRACK 01 (data)");
+    const CUETrackInfo *track = parser.next_track(0);
+    TEST(track != NULL);
+    if (track)
+    {
+        TEST(strcmp(track->filename, "track1.bin") == 0);
+        TEST(track->file_mode == CUEFile_BINARY);
+        TEST(track->file_offset == 0);
+        TEST(track->track_number == 1);
+        TEST(track->track_mode == CUETrack_MODE1_2352);
+        TEST(track->sector_length == 2352);
+        TEST(track->unstored_pregap_length == 0);
+        TEST(track->data_start == 0);
+        TEST(track->track_start == 0);
+    }
+
+    COMMENT("Test TRACK 02 (data)");
+    track = parser.next_track(2352 * 301); // track1.bin size 707952 bytes
+    TEST(track != NULL);
+    if (track)
+    {
+        TEST(strcmp(track->filename, "track2.bin") == 0);
+        TEST(track->file_mode == CUEFile_BINARY);
+        TEST(track->file_offset == 0);
+        TEST(track->track_number == 2);
+        TEST(track->track_mode == CUETrack_MODE1_2352);
+        TEST(track->sector_length == 2352);
+        TEST(track->unstored_pregap_length == 0);
+        TEST(track->data_start == (4 + 2) * 75 + 1 + 1);
+        TEST(track->track_start == 4 * 75 + 1);
+    }
+
+    track = parser.next_track(14594160);
+    TEST(track == NULL);
+
+    return status;
+}
+
 
 int main()
 {
-    if (test_basics() && test_datatracks() && test_datatrackpregap())
+    if (test_basics() && test_datatracks() && test_datatrackpregap() && test_multifile())
     {
         return 0;
     }

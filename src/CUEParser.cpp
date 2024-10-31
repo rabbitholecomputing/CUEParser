@@ -56,10 +56,16 @@ void CUEParser::restart()
 
 const CUETrackInfo *CUEParser::next_track()
 {
+    return next_track(0);
+}
+
+const CUETrackInfo *CUEParser::next_track(uint64_t prev_file_size)
+{
     // Previous track info is needed to track file offset
     uint32_t prev_track_start = m_track_info.track_start;
     uint32_t prev_sector_length = get_sector_length(m_track_info.file_mode, m_track_info.track_mode); // Defaults to 2352 before first track
 
+    bool got_file = false;
     bool got_track = false;
     bool got_data = false;
     bool got_pause = false; // true if a period of silence (INDEX 00) was encountered for a track
@@ -67,12 +73,21 @@ const CUETrackInfo *CUEParser::next_track()
     {
         if (strncasecmp(m_parse_pos, "FILE ", 5) == 0)
         {
+            if (m_track_info.file_index > 0)
+            {
+                // Take into account the length of last track in previous file.
+                uint32_t last_track_blocks = (prev_file_size - m_track_info.file_offset) / m_track_info.sector_length;
+                m_track_info.file_start = m_track_info.data_start + last_track_blocks;
+            }
+
             const char *p = read_quoted(m_parse_pos + 5, m_track_info.filename, sizeof(m_track_info.filename));
             m_track_info.file_mode = parse_file_mode(skip_space(p));
             m_track_info.file_offset = 0;
+            m_track_info.file_index++;
             m_track_info.track_mode = CUETrack_AUDIO;
             prev_track_start = 0;
             prev_sector_length = get_sector_length(m_track_info.file_mode, m_track_info.track_mode);
+            got_file = true;
         }
         else if (strncasecmp(m_parse_pos, "TRACK ", 6) == 0)
         {
@@ -107,13 +122,13 @@ const CUETrackInfo *CUEParser::next_track()
             if (index == 0)
             {
                 // Stored pregap that is present both on CD and in data file
-                m_track_info.track_start = time;
+                m_track_info.track_start = m_track_info.file_start + time;
                 got_pause = true;
             }
             else if (index == 1)
             {
                 // Data content of the track
-                m_track_info.data_start = time;
+                m_track_info.data_start = m_track_info.file_start + time;
                 got_data = true;
             }
         }
@@ -129,7 +144,12 @@ const CUETrackInfo *CUEParser::next_track()
 
     if (got_track && got_data)
     {
-        m_track_info.file_offset += (uint64_t)(m_track_info.track_start - prev_track_start) * prev_sector_length;
+        if (!got_file)
+        {
+            // Advance file position by the length of previous track
+            m_track_info.file_offset += (uint64_t)(m_track_info.track_start - prev_track_start) * prev_sector_length;
+        }
+
         return &m_track_info;
     }
     else
