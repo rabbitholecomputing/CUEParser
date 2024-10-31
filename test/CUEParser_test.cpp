@@ -74,7 +74,7 @@ FILE "Sound.wav" WAVE
     {
         TEST(strcmp(track->filename, "Image Name.bin") == 0);
         TEST(track->file_mode == CUEFile_BINARY);
-        TEST(track->file_offset == 2048 * start2 + 2352 * (start3_i0 - start2));
+        TEST(track->file_offset == 2048 * start2 + 2352 * (start3_i1 - start2));
         TEST(track->track_number == 3);
         TEST(track->track_mode == CUETrack_AUDIO);
         TEST(track->sector_length == 2352);
@@ -200,6 +200,7 @@ FILE "issue422.bin" BINARY
         TEST(strcmp(track->filename, "issue422.bin") == 0);
         TEST(track->file_mode == CUEFile_BINARY);
         TEST(track->file_offset == 0);
+        TEST(track->file_index == 1);
         TEST(track->track_number == 1);
         TEST(track->track_mode == CUETrack_AUDIO);
         TEST(track->sector_length == 2352);
@@ -216,6 +217,7 @@ FILE "issue422.bin" BINARY
         TEST(strcmp(track->filename, "issue422.bin") == 0);
         TEST(track->file_mode == CUEFile_BINARY);
         TEST(track->file_offset == 0xB254B0);
+        TEST(track->file_index == 1);
         TEST(track->track_number == 2);
         TEST(track->track_mode == CUETrack_MODE1_2352);
         TEST(track->sector_length == 2352);
@@ -255,6 +257,7 @@ FILE "track2.bin" BINARY
         TEST(strcmp(track->filename, "track1.bin") == 0);
         TEST(track->file_mode == CUEFile_BINARY);
         TEST(track->file_offset == 0);
+        TEST(track->file_index == 1);
         TEST(track->track_number == 1);
         TEST(track->track_mode == CUETrack_MODE1_2352);
         TEST(track->sector_length == 2352);
@@ -270,7 +273,8 @@ FILE "track2.bin" BINARY
     {
         TEST(strcmp(track->filename, "track2.bin") == 0);
         TEST(track->file_mode == CUEFile_BINARY);
-        TEST(track->file_offset == 0);
+        TEST(track->file_offset == (2 * 75 + 1) * 2352);
+        TEST(track->file_index == 2);
         TEST(track->track_number == 2);
         TEST(track->track_mode == CUETrack_MODE1_2352);
         TEST(track->sector_length == 2352);

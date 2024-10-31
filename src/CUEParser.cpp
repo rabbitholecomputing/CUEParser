@@ -150,6 +150,10 @@ const CUETrackInfo *CUEParser::next_track(uint64_t prev_file_size)
             m_track_info.file_offset += (uint64_t)(m_track_info.track_start - prev_track_start) * prev_sector_length;
         }
 
+        // Advance file position by any stored pregap
+        uint32_t stored_pregap = m_track_info.data_start - (m_track_info.track_start + m_track_info.unstored_pregap_length);
+        m_track_info.file_offset += (uint64_t)stored_pregap * m_track_info.sector_length;
+
         return &m_track_info;
     }
     else
