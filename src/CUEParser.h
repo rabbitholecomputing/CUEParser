@@ -20,6 +20,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifndef CUE_MAX_FILENAME
 #define CUE_MAX_FILENAME 64
@@ -132,4 +133,7 @@ protected:
 
     // Get sector length in file from track mode
     uint32_t get_sector_length(CUEFileMode filemode, CUETrackMode trackmode);
+
+    // Remove './' or '.\' from the beginning of the filename as it is not recogized by the SDFat library
+    void remove_dot_slash(char* filename, size_t length);
 };
