@@ -81,6 +81,7 @@ const CUETrackInfo *CUEParser::next_track(uint64_t prev_file_size)
             }
 
             const char *p = read_quoted(m_parse_pos + 5, m_track_info.filename, sizeof(m_track_info.filename));
+            remove_dot_slash(m_track_info.filename, sizeof(m_track_info.filename));
             m_track_info.file_mode = parse_file_mode(skip_space(p));
             m_track_info.file_offset = 0;
             m_track_info.file_index++;
@@ -307,5 +308,13 @@ uint32_t CUEParser::get_sector_length(CUEFileMode filemode, CUETrackMode trackmo
     else
     {
         return 0;
+    }
+}
+
+void CUEParser::remove_dot_slash(char * filename, size_t length)
+{
+    if (strncasecmp(filename, "./", 2) == 0 || strncasecmp(filename, ".\\", 2) == 0)
+    {
+        memmove(filename, filename + 2, length - 2);
     }
 }
