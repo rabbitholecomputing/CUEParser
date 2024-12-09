@@ -23,7 +23,7 @@
 #include <stddef.h>
 
 #ifndef CUE_MAX_FILENAME
-#define CUE_MAX_FILENAME 64
+#define CUE_MAX_FILENAME 256
 #endif
 
 enum CUEFileMode
