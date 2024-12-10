@@ -341,9 +341,40 @@ FILE ".\track2.bin" BINARY
     return status;
 }
 
+bool test_long_filename()
+{
+    bool status = true;
+    const char *cue_sheet = R"(
+CATALOG 0000000000000
+FILE "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.bin" BINARY
+  TRACK 01 MODE1/2352
+    INDEX 01 00:00:00
+    )";
+
+    CUEParser parser(cue_sheet);
+    COMMENT("test_long_filename()");
+    COMMENT("Test TRACK 01 (data)");
+    const CUETrackInfo *track = parser.next_track(0);
+    TEST(track != NULL);
+    if (track)
+    {
+        TEST(strcmp(track->filename, "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.bin") == 0);
+        TEST(track->file_mode == CUEFile_BINARY);
+        TEST(track->file_offset == 0);
+        TEST(track->file_index == 1);
+        TEST(track->track_number == 1);
+        TEST(track->track_mode == CUETrack_MODE1_2352);
+        TEST(track->sector_length == 2352);
+        TEST(track->unstored_pregap_length == 0);
+        TEST(track->data_start == 0);
+        TEST(track->track_start == 0);
+    }
+    return status;
+}
+
 int main()
 {
-    if (test_basics() && test_datatracks() && test_datatrackpregap() && test_multifile() && test_dot_slash_removal())
+    if (test_basics() && test_datatracks() && test_datatrackpregap() && test_multifile() && test_dot_slash_removal() && test_long_filename())
     {
         return 0;
     }
