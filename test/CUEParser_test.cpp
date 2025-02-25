@@ -53,6 +53,7 @@ FILE "Sound.wav" WAVE
     track = parser.next_track();
     TEST(track != NULL);
     uint32_t start2 = ((2 * 60) + 47) * 75 + 20;
+    uint32_t pregap_offset = 2 * 75;
     if (track)
     {
         TEST(strcmp(track->filename, "Image Name.bin") == 0);
@@ -61,8 +62,8 @@ FILE "Sound.wav" WAVE
         TEST(track->track_number == 2);
         TEST(track->track_mode == CUETrack_AUDIO);
         TEST(track->sector_length == 2352);
-        TEST(track->unstored_pregap_length == 2 * 75);
-        TEST(track->data_start == start2 + 2 * 75);
+        TEST(track->unstored_pregap_length == pregap_offset);
+        TEST(track->data_start == start2 + pregap_offset);
     }
 
     COMMENT("Test TRACK 03 (audio with index 0)");
@@ -78,13 +79,19 @@ FILE "Sound.wav" WAVE
         TEST(track->track_number == 3);
         TEST(track->track_mode == CUETrack_AUDIO);
         TEST(track->sector_length == 2352);
-        TEST(track->track_start == start3_i0);
-        TEST(track->data_start == start3_i1);
+        TEST(track->track_start == start3_i0 + pregap_offset);
+        TEST(track->data_start == start3_i1 + pregap_offset);
     }
 
     COMMENT("Test TRACK 11 (audio from wav)");
-    track = parser.next_track(track->file_offset + 75 * 4 * 2352);
+    uint32_t track03_lba_length = 4 * 75;
+    uint32_t prev_data_start = track->data_start;
+    // Because the FILE restarts MSF locations we need the lba offset it starts at
+    uint32_t zeroed_lba_offset = prev_data_start + track03_lba_length;
+    track = parser.next_track(track->file_offset + track03_lba_length * 2352);
     TEST(track != NULL);
+    uint32_t start11_i0 = zeroed_lba_offset + 0;
+    uint32_t start11_i1 = zeroed_lba_offset + (2 * 75);
     if (track)
     {
         TEST(strcmp(track->filename, "Sound.wav") == 0);
@@ -93,8 +100,8 @@ FILE "Sound.wav" WAVE
         TEST(track->track_number == 11);
         TEST(track->track_mode == CUETrack_AUDIO);
         TEST(track->sector_length == 0);
-        TEST(track->track_start == start3_i1 + 75 * 4);
-        TEST(track->data_start == start3_i1 + 75 * 6);
+        TEST(track->track_start == start11_i0 + pregap_offset);
+        TEST(track->data_start == start11_i1 + pregap_offset);
     }
 
     COMMENT("Test end of file");
