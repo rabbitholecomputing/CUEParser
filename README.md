@@ -28,6 +28,5 @@ For usage examples, checkout:
      INDEX 01 07:55:65
 ```
 
-Authored by Petteri Aimonen \
-Licensed under GPL3, see: [LICENSE.md](LICENSE.md) \
+Licensed under MIT, see: [LICENSE.md](LICENSE.md) \
 Copyright (c) 2023 Rabbit Hole Computing™
