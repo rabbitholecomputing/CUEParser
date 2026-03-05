@@ -98,18 +98,18 @@ public:
     CUEParser(const char *cue_sheet);
 
     // Restart parsing from beginning of file
-    void restart();
+    virtual void restart();
 
     // Get information for next track.
     // Returns nullptr when there are no more tracks.
     // The returned pointer remains valid until next call to next_track()
     // or destruction of this object.
-    const CUETrackInfo *next_track();
+    virtual const CUETrackInfo *next_track();
 
     // Same as next_track(), but takes the file size into account when
     // switching files. This is necessary for getting the correct track
     // lengths when the .cue file references multiple .bin files.
-    const CUETrackInfo *next_track(uint64_t prev_file_size);
+    virtual const CUETrackInfo *next_track(uint64_t prev_file_size);
 
 protected:
     const char *m_cue_sheet;
