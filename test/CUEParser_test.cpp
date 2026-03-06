@@ -379,9 +379,64 @@ FILE "00000000000000000000000000000000000000000000000000000000000000000000000000
     return status;
 }
 
+bool test_mixed_cd_pregap_and_index0()
+{
+        bool status = true;
+    const char *cue_sheet = R"(
+FILE "mixed-cd.bin" BINARY
+  TRACK 01 MODE1/2352
+    INDEX 01 00:00:00
+  TRACK 02 AUDIO
+    PREGAP 00:02:00
+    INDEX 00 29:09:48
+    INDEX 01 29:10:48
+  TRACK 03 AUDIO
+    INDEX 00 29:50:19
+    INDEX 01 29:52:19
+  TRACK 04 AUDIO
+    INDEX 00 33:27:54
+    INDEX 01 33:29:54
+    )";
+
+    CUEParser parser(cue_sheet);
+    COMMENT("test_mixed_cd_pregap_and_index0()");
+    COMMENT("Test TRACK 02 (pregap and index0)");
+    // Skip first track
+    parser.next_track();
+    const CUETrackInfo *track = parser.next_track();
+
+    TEST(track != NULL);
+    if (track)
+    {
+        uint32_t pregap_offset = 2 * 75;
+        uint32_t start2_i0 = ((29 * 60) + 9) * 75 + 48;
+        uint32_t start2_i1 = ((29 * 60) + 10) * 75 + 48;
+
+        TEST(strcmp(track->filename, "mixed-cd.bin") == 0);
+        TEST(track->file_mode == CUEFile_BINARY);
+        TEST(track->file_offset == start2_i1 * 2352);
+        TEST(track->file_index == 1);
+        TEST(track->track_number == 2);
+        TEST(track->track_mode == CUETrack_AUDIO);
+        TEST(track->sector_length == 2352);
+        TEST(track->unstored_pregap_length == pregap_offset);
+        TEST(track->track_start == start2_i0);
+        TEST(track->data_start == start2_i1);
+
+    }
+    return status;
+}
+
 int main()
 {
-    if (test_basics() && test_datatracks() && test_datatrackpregap() && test_multifile() && test_dot_slash_removal() && test_long_filename())
+    if (test_basics()
+        && test_datatracks()
+        && test_datatrackpregap()
+        && test_multifile()
+        && test_dot_slash_removal()
+        && test_long_filename()
+        && test_mixed_cd_pregap_and_index0()
+    )
     {
         return 0;
     }
