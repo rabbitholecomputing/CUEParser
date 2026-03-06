@@ -75,6 +75,7 @@ const CUETrackInfo *CUEParser::next_track(uint64_t prev_file_size)
     bool got_track = false;
     bool got_data = false;
     bool got_pause = false; // true if a period of silence (INDEX 00) was encountered for a track
+    uint32_t stored_pregap = 0;
     while(!(got_track && got_data) && start_line())
     {
         if (strncasecmp(m_parse_pos, "FILE ", 5) == 0)
@@ -130,12 +131,14 @@ const CUETrackInfo *CUEParser::next_track(uint64_t prev_file_size)
             {
                 // Stored pregap that is present both on CD and in data file
                 m_track_info.track_start = m_track_info.file_start + time + m_track_info.cumulative_offset;
+                stored_pregap = time;
                 got_pause = true;
             }
             else if (index == 1)
             {
                 // Data content of the track
                 m_track_info.data_start = m_track_info.file_start + time + m_track_info.cumulative_offset;
+                stored_pregap = time - stored_pregap;
                 got_data = true;
             }
         }
@@ -157,9 +160,11 @@ const CUETrackInfo *CUEParser::next_track(uint64_t prev_file_size)
             m_track_info.file_offset += (uint64_t)(m_track_info.track_start - (prev_track_start + m_track_info.cumulative_offset)) * prev_sector_length;
         }
 
-        // Advance file position by any stored pregap
-        uint32_t stored_pregap = m_track_info.data_start - (m_track_info.track_start + m_track_info.unstored_pregap_length);
-        m_track_info.file_offset += (uint64_t)stored_pregap * m_track_info.sector_length;
+        if (got_pause)
+        {
+            // Advance file position by any stored pregap
+            m_track_info.file_offset += stored_pregap * m_track_info.sector_length;
+        }
 
         return &m_track_info;
     }
