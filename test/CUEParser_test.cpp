@@ -409,12 +409,12 @@ FILE "mixed-cd.bin" BINARY
     if (track)
     {
         uint32_t pregap_offset = 2 * 75;
-        uint32_t start2_i0 = ((29 * 60) + 9) * 75 + 48;
-        uint32_t start2_i1 = ((29 * 60) + 10) * 75 + 48;
+        uint32_t start2_i0 = ((29 * 60) + 9) * 75 + 48 + pregap_offset;
+        uint32_t start2_i1 = ((29 * 60) + 10) * 75 + 48 + pregap_offset;
 
         TEST(strcmp(track->filename, "mixed-cd.bin") == 0);
         TEST(track->file_mode == CUEFile_BINARY);
-        TEST(track->file_offset == start2_i1 * 2352);
+        TEST(track->file_offset == (start2_i1 - pregap_offset) * 2352);
         TEST(track->file_index == 1);
         TEST(track->track_number == 2);
         TEST(track->track_mode == CUETrack_AUDIO);

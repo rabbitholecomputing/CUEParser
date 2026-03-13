@@ -73,6 +73,10 @@ struct CUETrackInfo
     // These frames of silence are not stored in the underlying data file.
     uint32_t unstored_pregap_length;
 
+    // The CD frames of PREGAP time at the start of this track,
+    // which are present both on CD and in data file.
+    uint32_t stored_pregap_length;
+    
     // The cumulative lba offset of unstored data
     uint32_t cumulative_offset;
 
