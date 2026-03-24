@@ -58,7 +58,7 @@ FILE "Sound.wav" WAVE
     {
         TEST(strcmp(track->filename, "Image Name.bin") == 0);
         TEST(track->file_mode == CUEFile_BINARY);
-        TEST(track->file_offset == 2048 * start2);
+        TEST(track->file_offset == 2352 * start2);
         TEST(track->track_number == 2);
         TEST(track->track_mode == CUETrack_AUDIO);
         TEST(track->sector_length == 2352);
@@ -75,7 +75,7 @@ FILE "Sound.wav" WAVE
     {
         TEST(strcmp(track->filename, "Image Name.bin") == 0);
         TEST(track->file_mode == CUEFile_BINARY);
-        TEST(track->file_offset == 2048 * start2 + 2352 * (start3_i1 - start2));
+        TEST(track->file_offset == 2352 * start3_i1);
         TEST(track->track_number == 3);
         TEST(track->track_mode == CUETrack_AUDIO);
         TEST(track->sector_length == 2352);
@@ -427,15 +427,76 @@ FILE "mixed-cd.bin" BINARY
     return status;
 }
 
+bool test_mixed_data_pregap_audio()
+{
+    bool status = true;
+    const char *cue_sheet = R"(
+    FILE "CD4.bin" BINARY
+  TRACK 01 MODE1/2048
+    INDEX 01 00:00:00
+  TRACK 02 AUDIO
+    PREGAP 00:02:00
+    INDEX 01 01:52:48
+  TRACK 03 AUDIO
+    PREGAP 00:01:74
+    INDEX 01 05:09:58
+)";
+
+    CUEParser parser(cue_sheet);
+    COMMENT("test_mixed_data_pregap_audio");
+
+    COMMENT("  track 1");
+    const CUETrackInfo *track = parser.next_track();
+    TEST(track != NULL);
+    if (track)
+    {
+        TEST(track->file_mode == CUEFile_BINARY);
+        TEST(track->file_offset == 0);
+        TEST(track->data_start == 0);
+        TEST(track->unstored_pregap_length == 0);
+        TEST(track->stored_pregap_length == 0);
+        TEST(track->track_mode == CUETrack_MODE1_2048);
+    }
+
+    COMMENT("  track 2");
+    track = parser.next_track();
+    TEST(track != NULL);
+    if (track)
+    {
+        TEST(track->track_mode == CUETrack_AUDIO);
+        TEST(track->file_offset == 0x12f3000);
+        TEST(track->data_start == 8598);
+        TEST(track->unstored_pregap_length == 2 * 75);
+        TEST(track->stored_pregap_length == 0);
+    }
+
+    COMMENT("  track 3");
+    track = parser.next_track();
+    TEST(track != NULL);
+    if (track)
+    {
+        TEST(track->track_mode == CUETrack_AUDIO);
+        TEST(track->file_offset == 0x341cd30);
+        TEST(track->data_start == 23532);
+        TEST(track->unstored_pregap_length == 149);
+        TEST(track->stored_pregap_length == 0);
+    }
+
+    return status;
+
+}
+
 int main()
 {
+    // Use & to always run all tests even if some fail
     if (test_basics()
-        && test_datatracks()
-        && test_datatrackpregap()
-        && test_multifile()
-        && test_dot_slash_removal()
-        && test_long_filename()
-        && test_mixed_cd_pregap_and_index0()
+        & test_datatracks()
+        & test_datatrackpregap()
+        & test_multifile()
+        & test_dot_slash_removal()
+        & test_long_filename()
+        & test_mixed_cd_pregap_and_index0()
+        & test_mixed_data_pregap_audio()
     )
     {
         return 0;
