@@ -67,11 +67,8 @@ const CUETrackInfo *CUEParser::next_track()
 const CUETrackInfo *CUEParser::next_track(uint64_t prev_file_size)
 {
     // Previous track info is needed to track file offset
-    uint32_t prev_track_start = m_track_info.track_start;
     m_track_info.cumulative_offset += m_track_info.unstored_pregap_length;
-    uint32_t prev_sector_length = get_sector_length(m_track_info.file_mode, m_track_info.track_mode); // Defaults to 2352 before first track
 
-    bool got_file = false;
     bool got_track = false;
     bool got_data = false;
     bool got_pause = false; // true if a period of silence (INDEX 00) was encountered for a track
@@ -92,9 +89,6 @@ const CUETrackInfo *CUEParser::next_track(uint64_t prev_file_size)
             m_track_info.file_offset = 0;
             m_track_info.file_index++;
             m_track_info.track_mode = CUETrack_AUDIO;
-            prev_track_start = 0;
-            prev_sector_length = get_sector_length(m_track_info.file_mode, m_track_info.track_mode);
-            got_file = true;
         }
         else if (strncasecmp(m_parse_pos, "TRACK ", 6) == 0)
         {
