@@ -152,11 +152,12 @@ const CUETrackInfo *CUEParser::next_track(uint64_t prev_file_size)
 
     if (got_track && got_data)
     {
-        if (!got_file)
-        {
-            // Advance file position by the length of previous track
-            m_track_info.file_offset += (uint64_t)(m_track_info.track_start - (prev_track_start + m_track_info.cumulative_offset)) * prev_sector_length;
-        }
+        // File offsets are always calculated by the sector length of the current track,
+        // even in .cue files that mix different sector formats. This can result in some
+        // padding needed in the file between a 2048 byte data track and 2352 byte audio
+        // track.
+        m_track_info.file_offset = (uint64_t)(m_track_info.track_start - m_track_info.cumulative_offset - m_track_info.file_start)
+                                    * m_track_info.sector_length;
 
         if (got_pause)
         {
